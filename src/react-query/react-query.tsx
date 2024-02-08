@@ -1,17 +1,27 @@
-import {useMutation, useQuery} from "@tanstack/react-query";
+import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import {addTodo, fetchTodos} from "./api/fetch-api.tsx";
 import TodoCard from "./components/todo-card.tsx";
 import {useState} from "react";
 
 const ReactQuery = () => {
-    const [title, seTitle] = useState('')
+    const queryClient = useQueryClient();
+
+    const [title, seTitle] = useState('');
+
+    const [search, setSearch] = useState('')
+
     const {data: todos, isLoading} = useQuery({
-        queryFn: () => fetchTodos(),
-        queryKey: ["todos"],
+        queryFn: () => fetchTodos(search),
+        queryKey: ["todos", {search}],
+        staleTime: Infinity,
+        gcTime: 0,
     });
 
     const {mutateAsync: addTodoMutation} = useMutation({
         mutationFn: addTodo,
+        onSuccess: () => {
+            queryClient.invalidateQueries(['todos']);
+        },
     });
 
     if (isLoading) {
